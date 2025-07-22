@@ -1,0 +1,5 @@
+#ignore
+.env/
+.DS_Store
+large-data/
+#keep
