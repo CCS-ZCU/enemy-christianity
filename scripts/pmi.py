@@ -103,7 +103,7 @@ def compute_pmi(tfidf_data, pickle_name, top_n=None, max_workers=24):
         pickle.dump(results, f)
 
 
-compute_pmi(tfidf_christian_0_300, "tfidf_christian_0_300")
-compute_pmi(tfidf_christian_300_600, "tfidf_christian_300_600")
-compute_pmi(tfidf_pagan_0_300, "tfidf_pagan_0_300")
-compute_pmi(tfidf_pagan_300_600, "tfidf_pagan_300_600")
+compute_pmi(tfidf_christian_0_300, "pmi_christian_0_300")
+compute_pmi(tfidf_christian_300_600, "pmi_christian_300_600")
+compute_pmi(tfidf_pagan_0_300, "pmi_pagan_0_300")
+compute_pmi(tfidf_pagan_300_600, "pmi_pagan_300_600")
