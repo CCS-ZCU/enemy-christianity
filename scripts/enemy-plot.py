@@ -51,38 +51,86 @@ if word and subcorpus:
     for i, (n, sim) in enumerate(neighbors_dict.get(word, [])[:n_neighbors], 1):
         st.write(f"{i}. {n} (similarity: {sim:.3f})")
 
-st.markdown("## PMI values ")
+st.markdown("## Tf-idf term cooccurence values")
 
-sele_subcorpus = st.selectbox("Subcorpus:", options=["pmi_christian_0_300.pkl", "pmi_christian_300_600.pkl", "pmi_pagan_0_300.pkl", "pmi_pagan_300_600.pkl"])
-with open(f"../data/large-data/{sele_subcorpus}", "rb") as f:
+sele_subcorpus = st.selectbox(
+    "Subcorpus:",
+    options=["christian_0_300", "christian_300_600", "pagan_0_300", "pagan_300_600"],
+    key="tfidf_corp"
+)
+with open("../data/large-data/tfidf_cooc.pkl", "rb") as f:
     data = pickle.load(f)
-corp = pd.DataFrame(data, columns=["0", "1", "pmi"])
-fword = st.text_input("Word to show PMI of:", value="ἐχθρός")
-filter_btn = st.button("Filter PMI by word")
+
+cooc_df = data[sele_subcorpus]
+fword = st.text_input("Word to show cooccurrences of:", value="ἐχθρός", key="tfidf_word")
+top_n = st.slider("Number of strongest cooccurrences to show:", min_value=1, max_value=100, value=20, key="tfidf_topn")
+filter_btn = st.button("Show strongest cooccurrences", key="tfidf_btn")
+
+def strongest_cooccurrences(cooc_df, target_word, top_n):
+    if target_word not in cooc_df.columns:
+        st.write(f"'{target_word}' not found in vocabulary.")
+        return None
+    scores = cooc_df[target_word].drop(target_word).sort_values(ascending=False)
+    return scores.head(top_n)
+
 if filter_btn:
-    filtered_df = corp.loc[corp.apply(lambda r: r.str.contains(fword, case=False).any(), axis=1)]
-    st.dataframe(filtered_df)
+    result = strongest_cooccurrences(cooc_df, fword, top_n)
+    if result is not None:
+        st.dataframe(result)
 else:
-    st.dataframe(corp)
+    st.dataframe(cooc_df)
 
-top = st.slider("Top_N matches:", min_value=1, max_value=100, value=20)
+st.markdown('''The numbers in the output of strongest_cooccurrences are the TF-IDF weighted co-occurrence scores between your specified word (e.g., "ἐχθρός") and other words in your vocabulary.
 
-def plot_pmi_barchart(df, selected_word='ἐχθρός', top_n=20):
-    mask = (df["0"] == selected_word) | (df["1"] == selected_word)
+What do they represent?
+
+Each value is the sum of products of TF-IDF weights for the two words across all sentences.
+Higher values mean the two words tend to appear together in the same sentences, and both are semantically important (high TF-IDF) in those sentences.
+It is not a raw frequency, but a measure of semantic association based on TF-IDF.
+- Higher score = stronger semantic co-occurrence with your target word.
+- Lower score = weaker or less meaningful co-occurrence.
+            ''')
+
+
+st.markdown("## PMI coocurence values")
+
+sele_subcorpus_pmi = st.selectbox(
+    "Subcorpus (PMI):",
+    options=["christian_0_300", "christian_300_600", "pagan_0_300", "pagan_300_600"],
+    key="pmi_corp"
+)
+with open("../data/large-data/pmi_all_subcorpora.pkl", "rb") as f:
+    pmi_data = pickle.load(f)
+
+pmi_df = pmi_data[sele_subcorpus_pmi]
+pmi_word = st.text_input("Word to show PMI cooccurrences of:", value="ἐχθρός", key="pmi_word")
+pmi_top_n = st.slider("Number of strongest PMI cooccurrences to show:", min_value=1, max_value=100, value=20, key="pmi_topn")
+pmi_btn = st.button("Show strongest PMI cooccurrences", key="pmi_btn")
+
+def strongest_pmi(df, target_word, top_n):
+    mask = (df["word1"] == target_word) | (df["word2"] == target_word)
     sub = df[mask].copy()
-    sub["other"] = sub.apply(lambda row: row["1"] if row["0"] == selected_word else row["0"], axis=1)
+    if sub.empty:
+        st.write(f"'{target_word}' not found in PMI pairs.")
+        return None
+    sub["other"] = sub.apply(lambda row: row["word2"] if row["word1"] == target_word else row["word1"], axis=1)
     sub = sub.sort_values("pmi", ascending=False).head(top_n)
-    fig = px.bar(
-        sub,
-        x="pmi",
-        y="other",
-        orientation="h",
-        labels={"pmi": "PMI", "other": "Other Word"},
-        title=f"Top {top_n} PMI for '{selected_word}'"
-    )
-    fig.update_layout(
-        width=500,
-        height=max(300, top_n * 30),
-        yaxis=dict(autorange="reversed")  # Highest PMI at top
-    )
-    return fig
+    return sub[["other", "pmi", "count"]]
+
+if pmi_btn:
+    result = strongest_pmi(pmi_df, pmi_word, pmi_top_n)
+    if result is not None:
+        st.dataframe(result)
+else:
+    st.dataframe(pmi_df)
+
+st.markdown('''column "count" - How many times both words coocur in a sentence.
+
+PMI (Pointwise Mutual Information) measures how much the actual co-occurrence of two words exceeds what would be expected if they were independent.
+
+High PMI: The word pair co-occurs much more often than expected by chance (strong association).
+
+Low/Negative PMI: The pair co-occurs less often than expected (weak or no association).
+
+Zero PMI: The pair co-occurs exactly as expected by chance.
+            ''')
