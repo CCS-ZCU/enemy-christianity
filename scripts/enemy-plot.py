@@ -63,26 +63,23 @@ with open("../data/large-data/tfidf_cooc.pkl", "rb") as f:
 
 cooc_df = data[sele_subcorpus]
 fword = st.text_input("Word to show cooccurrences of:", value="ἐχθρός", key="tfidf_word")
-top_n = st.slider("Number of strongest cooccurrences to show:", min_value=1, max_value=100, value=20, key="tfidf_topn")
-filter_btn = st.button("Show strongest cooccurrences", key="tfidf_btn")
+filter_btn = st.button("Filter cooccurrences", key="tfidf_btn")
 
-def strongest_cooccurrences(cooc_df, target_word, top_n):
+def strongest_cooccurrences(cooc_df, target_word):
     if target_word not in cooc_df.columns:
         st.write(f"'{target_word}' not found in vocabulary.")
         return None
     scores = cooc_df[target_word].drop(target_word).sort_values(ascending=False)
-    return scores.head(top_n)
+    return scores
 
 if filter_btn:
-    result = strongest_cooccurrences(cooc_df, fword, top_n)
+    result = strongest_cooccurrences(cooc_df, fword)
     if result is not None:
         st.dataframe(result)
 else:
     st.dataframe(cooc_df)
 
-st.markdown('''The numbers in the output of strongest_cooccurrences are the TF-IDF weighted co-occurrence scores between your specified word (e.g., "ἐχθρός") and other words in your vocabulary.
-
-What do they represent?
+st.markdown('''The numbers in the output of strongest_cooccurrences are the TF-IDF weighted co-occurrence scores between word and other words in a vocabulary.
 
 Each value is the sum of products of TF-IDF weights for the two words across all sentences.
 Higher values mean the two words tend to appear together in the same sentences, and both are semantically important (high TF-IDF) in those sentences.
@@ -104,21 +101,20 @@ with open("../data/large-data/pmi_all_subcorpora.pkl", "rb") as f:
 
 pmi_df = pmi_data[sele_subcorpus_pmi]
 pmi_word = st.text_input("Word to show PMI cooccurrences of:", value="ἐχθρός", key="pmi_word")
-pmi_top_n = st.slider("Number of strongest PMI cooccurrences to show:", min_value=1, max_value=100, value=20, key="pmi_topn")
-pmi_btn = st.button("Show strongest PMI cooccurrences", key="pmi_btn")
+pmi_btn = st.button("Filter cooccurrences", key="pmi_btn")
 
-def strongest_pmi(df, target_word, top_n):
+def strongest_pmi(df, target_word):
     mask = (df["word1"] == target_word) | (df["word2"] == target_word)
     sub = df[mask].copy()
     if sub.empty:
         st.write(f"'{target_word}' not found in PMI pairs.")
         return None
     sub["other"] = sub.apply(lambda row: row["word2"] if row["word1"] == target_word else row["word1"], axis=1)
-    sub = sub.sort_values("pmi", ascending=False).head(top_n)
+    sub = sub.sort_values("pmi", ascending=False)
     return sub[["other", "pmi", "count"]]
 
 if pmi_btn:
-    result = strongest_pmi(pmi_df, pmi_word, pmi_top_n)
+    result = strongest_pmi(pmi_df, pmi_word)
     if result is not None:
         st.dataframe(result)
 else:
