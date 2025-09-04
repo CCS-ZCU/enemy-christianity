@@ -16,7 +16,7 @@ st.markdown("## t-SNE 2D Plot for nearest Word Neighbors")
 
 word = st.text_input("Word:", value='ἐχθρός')
 subcorpus = st.selectbox("Subcorpus:", options=subcorpora)
-n_neighbors = st.slider("Neighbors:", min_value=1, max_value=30, value=10)
+n_neighbors = st.slider("Neighbors:", min_value=1, max_value=100, value=10)
 show_context = st.checkbox("Show context dots", value=True)
 
 if word and subcorpus:
