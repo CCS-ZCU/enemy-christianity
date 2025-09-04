@@ -4,25 +4,26 @@ import unicodedata
 import numpy as np
 import inspect
 
-KEEP_COMBINING = set()  # e.g., set(["\u0308"]) to keep diaeresis
+KEEP_COMBINING = set()  # e.g. set(["\u0308"]) to keep diaeresis if stripping
 
-def normalize_greek(text: str, *, strip_diacritics: bool = True) -> str:
+def normalize_greek(text: str, *, strip_diacritics: bool = False) -> str:
+    """Normalize Greek text: unify apostrophes, NFC, optionally strip diacritics."""
     if not isinstance(text, str):
         return text
+
     # 1) Decompose so diacritics become combining marks
     s = unicodedata.normalize("NFD", text)
 
     # 2) Unify variant apostrophes/koronis to a single mark (’)
-    #    This helps reduce visual variants in Greek texts
     s = (
         s.replace("\u1FBD", "’")  # Greek Koronis
-        .replace("\u02BC", "’")  # Modifier Letter Apostrophe
-        .replace("\u2019", "’")  # Right single quotation mark
-        .replace("\u00B4", "’")  # Spacing acute accent (rarely used)
-        .replace("'", "’")       # ASCII apostrophe
+         .replace("\u02BC", "’")  # Modifier Letter Apostrophe
+         .replace("\u2019", "’")  # Right single quotation mark
+         .replace("\u00B4", "’")  # Spacing acute accent
+         .replace("'", "’")       # ASCII apostrophe
     )
 
-    # 3) Optionally strip all combining marks (accents, breathings, subscripts)
+    # 3) Optionally strip all combining marks
     if strip_diacritics:
         s = "".join(
             ch for ch in s
