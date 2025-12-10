@@ -5,8 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="82944a22-3da6-4574-916a-69174e14423d" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/scripts/grouped-polemical-temporal.ipynb" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/figures/grouped-polemical-temporal.png" beforeDir="false" afterPath="$PROJECT_DIR$/figures/grouped-polemical-temporal.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/scripts/grouped-polemical-temporal.ipynb" beforeDir="false" afterPath="$PROJECT_DIR$/scripts/grouped-polemical-temporal.ipynb" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -66,7 +67,7 @@
       <window_info anchor="bottom" id="Version Control" order="0" />
       <window_info anchor="bottom" id="Problems" order="1" />
       <window_info anchor="bottom" id="Problems View" order="2" />
-      <window_info active="true" anchor="bottom" id="Terminal" order="3" visible="true" weight="0.2338889" />
+      <window_info active="true" anchor="bottom" id="Terminal" order="3" visible="true" />
       <window_info anchor="bottom" id="Services" order="4" />
       <window_info anchor="bottom" id="Python Packages" order="5" weight="0.1" />
       <window_info anchor="bottom" id="Python Console" order="6" weight="0.1" />
@@ -98,7 +99,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1757069500145</updated>
-      <workItem from="1757069501752" duration="14578000" />
+      <workItem from="1757069501752" duration="23931000" />
     </task>
     <servers />
   </component>
