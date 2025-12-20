@@ -46,7 +46,12 @@ def bert_sentence_embeddings(
     l2_normalize=True,
 ):
     if max_length is None:
-        max_length = tokenizer.model_max_length  # usually 512
+        max_length = tokenizer.model_max_length
+
+    # NEW: ensure model is on the same device as inputs
+    model = model.to(device)
+    model.eval()
+
     vecs = []
     with torch.no_grad():
         for i in range(0, len(texts), batch_size):
@@ -58,26 +63,25 @@ def bert_sentence_embeddings(
                 truncation=True,
                 max_length=max_length,
             )
+
             # move tensors to device
-            for k, v in enc.items():
-                if isinstance(v, torch.Tensor):
-                    enc[k] = v.to(device)
+            enc = {k: v.to(device) if isinstance(v, torch.Tensor) else v for k, v in enc.items()}
 
             out = model(**enc, output_hidden_states=True)
-            # last four hidden layers -> average across layers
-            last4 = out.hidden_states[-4:]                    # list of 4 tensors, each [B, T, H]
-            token_reps = torch.stack(last4, dim=0).mean(0)    # [B, T, H]
 
-            # mean-pool over tokens with attention mask (exclude padding)
-            mask = enc["attention_mask"].unsqueeze(-1)        # [B, T, 1]
+            last4 = out.hidden_states[-4:]
+            token_reps = torch.stack(last4, dim=0).mean(0)
+
+            mask = enc["attention_mask"].unsqueeze(-1)
             masked = token_reps * mask
-            lengths = mask.sum(dim=1).clamp(min=1)            # [B, 1]
-            sent_reps = masked.sum(dim=1) / lengths           # [B, H]
+            lengths = mask.sum(dim=1).clamp(min=1)
+            sent_reps = masked.sum(dim=1) / lengths
 
             if l2_normalize:
                 sent_reps = torch.nn.functional.normalize(sent_reps, p=2, dim=1)
 
-            vecs.append(sent_reps.cpu().numpy())
+            vecs.append(sent_reps.detach().cpu().numpy())
+
     return np.vstack(vecs) if vecs else np.empty((0, model.config.hidden_size), dtype=np.float32)
 
 # --------------------------------------------------------------
@@ -166,6 +170,8 @@ def hidden_anchor_embedding(
     layers: list[int] = (8, 9, 10, 11),  # layers to average
     piece_pooling: str = "mean",          # "mean" or "sum"
 ):
+    model = model.to(device)
+    model.eval()
     target_lemma = target_lemma.lower()
     anchor = next((t for t in aug_tokens if t["lemma"].lower() == target_lemma), None)
     if anchor is None:
@@ -219,6 +225,8 @@ def attention_weights_by_lemma(
     direction: str = "from",  # "from" = target attends to others, "to" = others attend to target
     normalize: bool = True,   # normalize anchor_vec to sum to 1
 ):
+    model = model.to(device)
+    model.eval()
     target_lemma = target_lemma.lower()
 
     enc = encode_trunc(
